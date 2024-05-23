@@ -1,0 +1,23 @@
+Assignment 5B: Exploring a High Level Graphics Library
+
+1. Simple 3js scene
+2. Add textures 
+3. Add custome 3D Model
+4. Add controls to camera
+5. Add extra light sources
+6. Add a skybox
+7. Add more 3D objects to your scene
+8. Awesomeness
+
+
+Basic scene working (at least 3 different primary shapes)
+At least one primary shape textured
+Custom 3d textured Model
+Camera movement without orbit controls
+3 different light sources in your scene
+Skybox in scene
+At least 20 primary shapes in the scene
+
+
+
+idea: Chessboard texture with a bunch of different shapes / models as pieces

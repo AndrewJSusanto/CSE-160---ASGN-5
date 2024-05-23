@@ -1,69 +1,130 @@
 //import * as THREE from '../node_modules/three/build/three.module.js';
 import * as THREE from 'three';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+
+class MinMaxGUIHelper {
+    constructor(obj, minProp, maxProp, minDif) {
+        this.obj = obj;
+        this.minProp = minProp;
+        this.maxProp = maxProp;
+        this.minDif = minDif;
+    }
+    get min() {
+        return this.obj[this.minProp];
+    }
+    set min(v) {
+        this.obj[this.minProp] = v;
+        this.obj[this.maxProp] = Math.max(this.obj[this.maxProp], v + this.minDif);
+    }
+    get max() {
+        return this.obj[this.maxProp];
+    }
+    set max(v) {
+        this.obj[this.maxProp] = v;
+        this.min = this.min;  // this will call the min setter
+    }
+}
+
+function updateCamera() {
+    camera.updateProjectionMatrix();
+}
 
 function main() {
     const canvas = document.querySelector('#c');
     const renderer = new THREE.WebGLRenderer( {antialias: true, canvas} );
 
-    const fov = 45;
+    const fov = 40;
     const aspect = 2;
     const near = 0.1;
     const far = 40;
     const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-    //camera.position.z = 3;
-    camera.position.set( 0, 3, 15 );
+    camera.position.set( 0, 3, 22 );
+
+    const controls = new OrbitControls(camera, canvas);
+    controls.target.set(0, 3, 0);
+    controls.update();
     const scene = new THREE.Scene();
+    const shapes = [];
+
+    const mat_white = new THREE.MeshStandardMaterial( {color: 0xffffff, roughness: 0.5} );
+    const mat_black = new THREE.MeshStandardMaterial( {color: 0x454E57, roughness: 0.5} );
 
     // LIGHT SOURCE
+
+    // Directional
     const color = 0xFFFFFF;
-    const intensity = 3;
+    const intensity = 0.5;
     const light = new THREE.DirectionalLight(color, intensity);
     light.position.set(-1, 2, 4);
     scene.add(light);
 
+    // Ambient
+
+    const color_a = 0xFFFFFF;
+    const intensity_a = 0.03;
+    const light_ambient = new THREE.AmbientLight(color_a, intensity_a);
+    scene.add(light_ambient);
+
+    // Headlight
+
+    const color_h = 0xFFF5D5;
+    const intensity_h = 200;
+    const light_headlight = new THREE.SpotLight(color_h, intensity_h, 100, 10, 0.4);
+    light_headlight.position.set(0.26, 1.225, -0.9);
+    light_headlight.target.position.set(-100, 1, -1);
+
+    scene.add(light_headlight);
+    scene.add(light_headlight.target);
+
+    const helper = new THREE.SpotLightHelper(light_headlight);
+    //scene.add(helper);
+
+
     // TEXTURES
     const loadManager = new THREE.LoadingManager();
     const loader = new THREE.TextureLoader(loadManager);
-    //const wall_texture = loader.load( '../resources/images/wall.jpg')
-    //wall_texture.colorSpace = THREE.SRGBColorSpace;
-    const materials = [
-        new THREE.MeshBasicMaterial( {map: loadColorTexture( '../resources/images/flower-1.jpg')} ),
-        new THREE.MeshBasicMaterial( {map: loadColorTexture( '../resources/images/flower-2.jpg')} ),
-        new THREE.MeshBasicMaterial( {map: loadColorTexture( '../resources/images/flower-3.jpg')} ),
-        new THREE.MeshBasicMaterial( {map: loadColorTexture( '../resources/images/flower-4.jpg')} ),
-        new THREE.MeshBasicMaterial( {map: loadColorTexture( '../resources/images/flower-5.jpg')} ),
-        new THREE.MeshBasicMaterial( {map: loadColorTexture( '../resources/images/flower-6.jpg')} ),
-    ]
+    const skybox = loader.load(
+        '../resources/images/Outside2.jpg', () => {
+            skybox.mapping = THREE.EquirectangularReflectionMapping;
+            skybox.colorSpace = THREE.SRGBColorSpace;
+            scene.background = skybox;
+        }
+    )
 
     // LANDSCAPE
-    const planeSize = 20;
-    const checker_texture = loader.load('../resources/images/checker.png');
-    checker_texture.colorSpace = THREE.SRGBColorSpace;
-    checker_texture.wrapS = THREE.RepeatWrapping;
-    checker_texture.wrapT = THREE.RepeatWrapping;
-    checker_texture.magFilter = THREE.NearestFilter;
-    const repeats = planeSize / 2;
-    checker_texture.repeat.set( repeats, repeats  );
+    const planeSize = 16;
+    const chessboard = loader.load('../resources/images/Chessboard.jpg');
+    chessboard.colorSpace = THREE.SRGBColorSpace;
+    chessboard.wrapS = THREE.ClampToEdgeWrapping;
+    chessboard.wrapT = THREE.ClampToEdgeWrapping;
+    chessboard.magFilter = THREE.NearestFilter;
+    //const repeats = planeSize / 2;
+    //chessboard.repeat.set( repeats, repeats  );
 
     const planeGeo = new THREE.PlaneGeometry( planeSize, planeSize );
     const planeMat = new THREE.MeshPhongMaterial( {
-        map: checker_texture,
+        map: chessboard,
         side: THREE.DoubleSide,
     });
     const mesh = new THREE.Mesh( planeGeo, planeMat );
     mesh.rotation.x = Math.PI * -.5;
+    mesh.rotation.y = Math.PI;
+    mesh.position.set(0, -0.01, 0);
     scene.add( mesh );
 
     // CUSTOM 3D OBJ
     const objLoader = new OBJLoader();
-    objLoader.load('../resources/models/bench/Bench.obj', (root) => {
-        root.scale.setScalar(10);
-        root.position.set(2.5, 0, -2.2)
-        root.rotation.y = 2.7;
+    objLoader.load('../resources/models/bench/Helmet.obj', (root) => {
+        root.scale.set(0.08, 0.06, 0.04);
+        root.position.set(0.85, 1, -1.3)
+        root.rotation.x = -(Math.PI/2);
+        root.rotation.z = -(Math.PI/2);
         root.traverse(node => {
-            const material = new THREE.MeshPhongMaterial( {
-                color: 0x964B00,
+            const material = new THREE.MeshStandardMaterial( {
+                color: 0xFFA500,
+                roughness: 0.25
             })
             if (material) {
                 node.material = material;
@@ -73,110 +134,380 @@ function main() {
         // add material textures
     })
 
-    // SPHERE
-    // radius, height segments, width segments
-    const sphere_texture = loader.load('../resources/images/sunrays.jpg');
-    sphere_texture.colorSpace = THREE.SRGBColorSpace;
-    sphere_texture.wrapS = THREE.RepeatWrapping;
-    sphere_texture.wrapT = THREE.RepeatWrapping;
-    sphere_texture.magFilter = THREE.NearestFilter;
-    const sphere_geometry = new THREE.SphereGeometry(1.5, 32, 16);
-    const sphere_color = new THREE.Color(0xFFFF00)
-    // MeshStandardMaterial has some gloss for lightsource feedback
-    const sphere_material = new THREE.MeshStandardMaterial( {
-        map: sphere_texture,
+    // CHESS PIECES
+    const crowns = []
+
+    // ROOKS
+    const geo_rook = new THREE.CylinderGeometry(0.4, 0.6, 1, 16);
+    const geo_rook_head = new THREE.CylinderGeometry(0.6, 0.6, 0.2, 8);
+
+    const w_rook1 = new THREE.Mesh( geo_rook, mat_white);
+    const w_rook1_head = new THREE.Mesh( geo_rook_head, mat_white);
+    const w_rook2 = new THREE.Mesh( geo_rook, mat_white);
+    const w_rook2_head = new THREE.Mesh( geo_rook_head, mat_white);
+    const b_rook1 = new THREE.Mesh( geo_rook, mat_black);
+    const b_rook1_head = new THREE.Mesh( geo_rook_head, mat_black);
+    const b_rook2 = new THREE.Mesh( geo_rook, mat_black);
+    const b_rook2_head = new THREE.Mesh( geo_rook_head, mat_black);
+
+
+    w_rook1.position.set(7, 0.5, 7);
+    w_rook1_head.position.set(7, 1, 7);
+    w_rook2.position.set(7, 0.5, -7);
+    w_rook2_head.position.set(7, 1, -7);
+    b_rook1.position.set(-7, 0.5, 7);
+    b_rook1_head.position.set(-7, 1, 7);
+    b_rook2.position.set(-7, 0.5, -7);
+    b_rook2_head.position.set(-7, 1, -7);
+
+    shapes.push(w_rook1);
+    shapes.push(w_rook1_head);
+    shapes.push(w_rook2);
+    shapes.push(w_rook2_head);
+    shapes.push(b_rook1);
+    shapes.push(b_rook1_head);
+    shapes.push(b_rook2);
+    shapes.push(b_rook2_head);
+
+    // BISHOPS
+
+    const geo_bishop = new THREE.CylinderGeometry(0.1, 0.6, 1, 16);
+    const geo_bishop_head = new THREE.LatheGeometry();
+    const w_bishop1 = new THREE.Mesh( geo_bishop, mat_white);
+    const w_bishop1_head = new THREE.Mesh( geo_bishop_head, mat_white);
+    const w_bishop2 = new THREE.Mesh( geo_bishop, mat_white);
+    const w_bishop2_head = new THREE.Mesh( geo_bishop_head, mat_white);
+    const b_bishop1 = new THREE.Mesh( geo_bishop, mat_black);
+    const b_bishop1_head = new THREE.Mesh( geo_bishop_head, mat_black);
+    const b_bishop2 = new THREE.Mesh( geo_bishop, mat_black);
+    const b_bishop2_head = new THREE.Mesh( geo_bishop_head, mat_black);
+
+    w_bishop1.position.set(7, 0.5, 3);
+    w_bishop1_head.position.set(7, 0.9, 3);
+    w_bishop2.position.set(7, 0.5, -3);
+    w_bishop2_head.position.set(7, 0.9, -3);
+    b_bishop1.position.set(-7, 0.5, 3);
+    b_bishop1_head.position.set(-7, 0.9, 3);
+    b_bishop2.position.set(-7, 0.5, -3);
+    b_bishop2_head.position.set(-7, 0.9, -3);
+
+    shapes.push(w_bishop1);
+    shapes.push(w_bishop1_head);
+    shapes.push(w_bishop2);
+    shapes.push(w_bishop2_head);
+    shapes.push(b_bishop1);
+    shapes.push(b_bishop1_head);
+    shapes.push(b_bishop2);
+    shapes.push(b_bishop2_head);
+
+
+
+    // KNIGHTS
+    const geo_kn = new THREE.CylinderGeometry(0.3, 0.6, 1, 16);
+    const geo_kn_h1 = new THREE.CapsuleGeometry(0.5, 0, 1, 8);
+    const geo_kn_h2 = new THREE.CylinderGeometry(0.1, 0.2, 0.5, 16);
+
+
+    const w_kn1 = new THREE.Mesh(geo_kn, mat_white);
+    const w_kn1_h1 = new THREE.Mesh(geo_kn_h1, mat_white);
+    const w_kn1_h2 = new THREE.Mesh(geo_kn_h2, mat_white);
+    const w_kn2 = new THREE.Mesh(geo_kn, mat_white);
+    const w_kn2_h1 = new THREE.Mesh(geo_kn_h1, mat_white);
+    const w_kn2_h2 = new THREE.Mesh(geo_kn_h2, mat_white);
+
+    const b_kn1 = new THREE.Mesh(geo_kn, mat_black);
+    const b_kn1_h1 = new THREE.Mesh(geo_kn_h1, mat_black);
+    const b_kn1_h2 = new THREE.Mesh(geo_kn_h2, mat_black);
+    const b_kn2 = new THREE.Mesh(geo_kn, mat_black);
+    const b_kn2_h1 = new THREE.Mesh(geo_kn_h1, mat_black);
+    const b_kn2_h2 = new THREE.Mesh(geo_kn_h2, mat_black);
+
+
+    w_kn1.position.set(7, 0.5, 5);
+    w_kn1_h1.position.set(7, 1, 5);
+    w_kn1_h2.rotateZ(Math.PI/2);
+    w_kn1_h2.position.set(6.5, 1, 5);
+
+    w_kn2.position.set(7, 0.5, -5);
+    w_kn2_h1.position.set(7, 1, -5);
+    w_kn2_h2.rotateZ(Math.PI/2);
+    w_kn2_h2.position.set(6.5, 1, -5);
+
+    b_kn1.position.set(-7, 0.5, 5);
+    b_kn1_h1.position.set(-7, 1, 5);
+    b_kn1_h2.rotateZ(-Math.PI/2);
+    b_kn1_h2.position.set(-6.5, 1, 5);
+
+    b_kn2.position.set(-7, 0.5, -5);
+    b_kn2_h1.position.set(-7, 1, -5);
+    b_kn2_h2.rotateZ(-Math.PI/2);
+    b_kn2_h2.position.set(-6.5, 1, -5);
+
+    shapes.push(w_kn1);
+    shapes.push(w_kn1_h1);
+    shapes.push(w_kn1_h2);
+    shapes.push(w_kn2);
+    shapes.push(w_kn2_h1);
+    shapes.push(w_kn2_h2);
+    shapes.push(b_kn1);
+    shapes.push(b_kn1_h1);
+    shapes.push(b_kn1_h2);
+    shapes.push(b_kn2);
+    shapes.push(b_kn2_h1);
+    shapes.push(b_kn2_h2);
+
+    // QUEENS
+    const pearl = loader.load('../resources/images/Pearl.jpg');
+    pearl.colorSpace = THREE.SRGBColorSpace;
+    pearl.wrapS = pearl.wrapT = THREE.MirroredRepeatWrapping;
+    pearl.magFilter = THREE.LinearFilter;
+
+    const mat_pearl = new THREE.MeshStandardMaterial( {
+        map: pearl,
         color: 0xFFFFFF,
-        roughness: 0} );
-    const sphere = new THREE.Mesh( sphere_geometry, sphere_material );
-    sphere.material.color = sphere_color;
-    sphere.position.set(-5, 6, -3);
-    scene.add(sphere);
+        roughness: 0
+    });
 
-    function animate(time) {
-        time *= 0.001;
+    const opal = loader.load('../resources/images/Opal.jpg');
+    opal.colorSpace = THREE.SRGBColorSpace;
+    opal.wrapS = opal.wrapT = THREE.MirroredRepeatWrapping;
+    opal.magFilter = THREE.LinearFilter;
 
-        requestAnimationFrame(animate);
-        sphere.rotation.x = time;
-        sphere.rotation.y = time;
+    const mat_opal = new THREE.MeshStandardMaterial( {
+        map: opal,
+        color: 0xFFFFFF,
+        roughness: 0
+    })
 
-        renderer.render(scene, camera);
-    
+    const geo_queen = new THREE.CylinderGeometry(0.4, 0.7, 1.5, 16);
+    const points = [];
+    for ( let i = 0; i < 10; i ++ ) {
+        points.push( new THREE.Vector2( Math.sin( i * 0.7 ) * 10 + 5, ( i - 5 ) * 2 ) );
     }
-    requestAnimationFrame(animate);
-
-    // CYLINDER
-    const cyl_geometry = new THREE.CylinderGeometry(0.25, 0.5, 2, 16);
-    const cyl_material = new THREE.MeshPhongMaterial( {color: 0x44aa88} );
-    const cylinder = new THREE.Mesh( cyl_geometry, cyl_material);
-    cylinder.position.set(6, 1, 1);
-    scene.add(cylinder);
-
-    // function cyl_animate(time) {
-    //     time *= 0.001;
-
-    //     requestAnimationFrame(cyl_animate);
-    //     cylinder.rotation.x = time;
-
-    //     renderer.render(scene, camera);
-    // }
-    //requestAnimationFrame(cyl_animate);
+    const geo_queen_crown1 = new THREE.LatheGeometry(points);
+    const geo_queen_crown2 = new THREE.OctahedronGeometry(0.45, 0);
 
 
 
-    // CUBE
-    const boxWidth = 1.25;
-    const boxHeight = 1.25;
-    const boxDepth = 1.25;
-    const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
 
-    //const material = new THREE.MeshPhongMaterial( {color: 0x44aa88} );
-    //const cube = new THREE.Mesh(geometry, material);
-    const cubes = [];
+    const w_queen = new THREE.Mesh(geo_queen, mat_white);
+    const w_queen_crown1 = new THREE.Mesh(geo_queen_crown1, mat_white);
+    const w_queen_crown2 = new THREE.Mesh(geo_queen_crown2, mat_pearl);
+    const b_queen = new THREE.Mesh(geo_queen, mat_black);
+    const b_queen_crown1 = new THREE.Mesh(geo_queen_crown1, mat_black);
+    const b_queen_crown2 = new THREE.Mesh(geo_queen_crown2, mat_opal);
 
-    // Cube rendering with multiple texture load wait
-    loadManager.onLoad = () => {
-        const cube = new THREE.Mesh(geometry, materials);
-        cube.position.set(6, 2, 1);
-        scene.add(cube);
-        cubes.push(cube);
-        
-    };
+    w_queen_crown1.scale.setScalar(0.04);
+    w_queen_crown2.scale.set(1, 0.8, 1);
+    b_queen_crown1.scale.setScalar(0.04);
+    b_queen_crown2.scale.set(1, 0.8, 1);        
 
-    function render(time) {
+
+    w_queen.position.set(7, 0.75, 1);
+    w_queen_crown1.position.set(7, 1.4, 1);
+    w_queen_crown2.position.set(7, 2.1, 1);
+
+    b_queen.position.set(-7, 0.75, 1);
+    b_queen_crown1.position.set(-7, 1.4, 1);
+    b_queen_crown2.position.set(-7, 2.1, 1);
+
+    crowns.push(w_queen_crown2);
+    crowns.push(b_queen_crown2);
+
+    shapes.push(w_queen);
+    shapes.push(w_queen_crown1);
+    shapes.push(w_queen_crown2);
+
+    shapes.push(b_queen);
+    shapes.push(b_queen_crown1);
+    shapes.push(b_queen_crown2);
+
+    // KINGS
+    const geo_king = new THREE.CylinderGeometry(0.4, 0.7, 1.6, 16);
+    const geo_king_crown2 = new THREE.IcosahedronGeometry(0.55, 0);
+    const geo_king_crown3 = new THREE.TorusGeometry(0.6, 0.1, 8, 30);
+
+
+    const w_king = new THREE.Mesh(geo_king, mat_white);
+    const w_king_crown1 = new THREE.Mesh(geo_queen_crown1, mat_white);
+    const w_king_crown2 = new THREE.Mesh(geo_king_crown2, mat_pearl);
+    const w_king_crown3 = new THREE.Mesh(geo_king_crown3, mat_white);
+
+    const b_king = new THREE.Mesh(geo_king, mat_black);
+    const b_king_crown1 = new THREE.Mesh(geo_queen_crown1, mat_black);
+    const b_king_crown2 = new THREE.Mesh(geo_king_crown2, mat_opal);
+    const b_king_crown3 = new THREE.Mesh(geo_king_crown3, mat_black);
+
+    w_king_crown1.scale.setScalar(0.04);
+    w_king_crown2.scale.set(1, 0.5, 1);
+    w_king_crown3.rotation.x = Math.PI * 0.5;
+
+    b_king_crown1.scale.setScalar(0.04);
+    b_king_crown2.scale.set(1, 0.5, 1);
+    b_king_crown3.rotation.x = Math.PI * 0.5;
+
+    w_king.position.set(7, 0.80, -1);
+    w_king_crown1.position.set(7, 1.5, -1);
+    w_king_crown2.position.set(7, 2, -1);
+    w_king_crown3.position.set(7, 2.4, -1);
+
+    b_king.position.set(-7, 0.80, -1);
+    b_king_crown1.position.set(-7, 1.5, -1);
+    b_king_crown2.position.set(-7, 2, -1);
+    b_king_crown3.position.set(-7, 2.4, -1);
+
+    crowns.push(w_king_crown2);
+    crowns.push(b_king_crown2);
+
+    shapes.push(w_king);
+    shapes.push(w_king_crown1);
+    shapes.push(w_king_crown2);
+    shapes.push(w_king_crown3);
+
+    shapes.push(b_king);
+    shapes.push(b_king_crown1);
+    shapes.push(b_king_crown2);
+    shapes.push(b_king_crown3);
+
+    // Texture
+
+
+    function q_animate(time) {
         time *= 0.001;
-        
-        cubes.forEach((cube, ndx) => {
-            const speed = 1 + ndx * .1;
+        crowns.forEach((shape, ndx) => {
+            const speed = 1 + ndx * .001;
             const rot = time * speed;
-            cube.rotation.x = rot;
-            cube.rotation.y = rot / 1.5;
+
+            shape.rotation.y = rot;
         })
-    
         renderer.render(scene, camera);
-        requestAnimationFrame(render);
+        requestAnimationFrame(q_animate);
     }
+    q_animate();
 
-    // function makeInstance(geometry, color, x) {
-    //     //const material = new THREE.MeshPhongMaterial( {color} );
-    //     const material = new THREE.MeshPhongMaterial ( {
-    //         color: 0x8844aa,
-    //         //map: texture,
-    //     });
-    //     const cube = new THREE.Mesh(geometry, material);
-    //     scene.add(cube);
+    // PAWNS
 
-    //     cube.position.x = x;
+    const geo_pawn = new THREE.CylinderGeometry(0.3, 0.5, 0.8, 16);
+    const geo_pawn_head = new THREE.IcosahedronGeometry(0.45, 1);
 
-    //     return cube;
-    // }
+    const w_pawn1 = new THREE.Mesh(geo_pawn, mat_white);
+    const w_pawn2 = w_pawn1.clone();
+    const w_pawn3 = w_pawn1.clone();
+    const w_pawn4 = w_pawn1.clone();
+    const w_pawn5 = w_pawn1.clone();
+    const w_pawn6 = w_pawn1.clone();
+    const w_pawn7 = w_pawn1.clone();
+    const w_pawn8 = w_pawn1.clone();
 
-    function loadColorTexture(path) {
-        const texture = loader.load(path);
-        texture.colorSpace = THREE.SRGBColorSpace;
-        return texture;
+    const w_pawn1_head = new THREE.Mesh(geo_pawn_head, mat_white);
+    w_pawn1_head.scale.set(1, 0.5, 1);
+    const w_pawn2_head = w_pawn1_head.clone();
+    const w_pawn3_head = w_pawn1_head.clone();
+    const w_pawn4_head = w_pawn1_head.clone();
+    const w_pawn5_head = w_pawn1_head.clone();
+    const w_pawn6_head = w_pawn1_head.clone();
+    const w_pawn7_head = w_pawn1_head.clone();
+    const w_pawn8_head = w_pawn1_head.clone();
+
+
+    const b_pawn1 = new THREE.Mesh(geo_pawn, mat_black);
+    const b_pawn2 = b_pawn1.clone();
+    const b_pawn3 = b_pawn1.clone();
+    const b_pawn4 = b_pawn1.clone();
+    const b_pawn5 = b_pawn1.clone();
+    const b_pawn6 = b_pawn1.clone();
+    const b_pawn7 = b_pawn1.clone();
+    const b_pawn8 = b_pawn1.clone();
+
+    const b_pawn1_head = new THREE.Mesh(geo_pawn_head, mat_black);
+    b_pawn1_head.scale.set(1, 0.5, 1);
+    const b_pawn2_head = b_pawn1_head.clone();
+    const b_pawn3_head = b_pawn1_head.clone();
+    const b_pawn4_head = b_pawn1_head.clone();
+    const b_pawn5_head = b_pawn1_head.clone();
+    const b_pawn6_head = b_pawn1_head.clone();
+    const b_pawn7_head = b_pawn1_head.clone();
+    const b_pawn8_head = b_pawn1_head.clone();
+
+
+    w_pawn1.position.set(5, 0.4, 7);
+    w_pawn2.position.set(5, 0.4, 5);
+    w_pawn3.position.set(5, 0.4, 3);
+    w_pawn4.position.set(5, 0.4, 1);
+    w_pawn5.position.set(1, 0.4, -1);
+    w_pawn6.position.set(5, 0.4, -3);
+    w_pawn7.position.set(5, 0.4, -5);
+    w_pawn8.position.set(5, 0.4, -7);
+
+    w_pawn1_head.position.set(5, 0.9, 7);
+    w_pawn2_head.position.set(5, 0.9, 5);
+    w_pawn3_head.position.set(5, 0.9, 3);
+    w_pawn4_head.position.set(5, 0.9, 1);
+    w_pawn5_head.position.set(1, 0.9, -1);
+    w_pawn6_head.position.set(5, 0.9, -3);
+    w_pawn7_head.position.set(5, 0.9, -5);
+    w_pawn8_head.position.set(5, 0.9, -7);
+
+    b_pawn1.position.set(-5, 0.4, 7);
+    b_pawn2.position.set(-5, 0.4, 5);
+    b_pawn3.position.set(-5, 0.4, 3);
+    b_pawn4.position.set(-5, 0.4, 1);
+    b_pawn5.position.set(-5, 0.4, -1);
+    b_pawn6.position.set(-5, 0.4, -3);
+    b_pawn7.position.set(-5, 0.4, -5);
+    b_pawn8.position.set(-5, 0.4, -7);
+
+    b_pawn1_head.position.set(-5, 0.9, 7);
+    b_pawn2_head.position.set(-5, 0.9, 5);
+    b_pawn3_head.position.set(-5, 0.9, 3);
+    b_pawn4_head.position.set(-5, 0.9, 1);
+    b_pawn5_head.position.set(-5, 0.9, -1);
+    b_pawn6_head.position.set(-5, 0.9, -3);
+    b_pawn7_head.position.set(-5, 0.9, -5);
+    b_pawn8_head.position.set(-5, 0.9, -7);
+
+    shapes.push(w_pawn1);
+    shapes.push(w_pawn2);
+    shapes.push(w_pawn3);
+    shapes.push(w_pawn4);
+    shapes.push(w_pawn5);
+    shapes.push(w_pawn6);
+    shapes.push(w_pawn7);
+    shapes.push(w_pawn8);
+
+    shapes.push(w_pawn1_head);
+    shapes.push(w_pawn2_head);
+    shapes.push(w_pawn3_head);
+    shapes.push(w_pawn4_head);
+    shapes.push(w_pawn5_head);
+    shapes.push(w_pawn6_head);
+    shapes.push(w_pawn7_head);
+    shapes.push(w_pawn8_head);
+
+    shapes.push(b_pawn1);
+    shapes.push(b_pawn2);
+    shapes.push(b_pawn3);
+    shapes.push(b_pawn4);
+    shapes.push(b_pawn5);
+    shapes.push(b_pawn6);
+    shapes.push(b_pawn7);
+    shapes.push(b_pawn8);
+
+    shapes.push(b_pawn1_head);
+    shapes.push(b_pawn2_head);
+    shapes.push(b_pawn3_head);
+    shapes.push(b_pawn4_head);
+    shapes.push(b_pawn5_head);
+    shapes.push(b_pawn6_head);
+    shapes.push(b_pawn7_head);
+    shapes.push(b_pawn8_head);
+
+    function sceneAdd() {
+        shapes.forEach((shape, ndx) => {
+            scene.add(shape);
+        })
     }
-
-    requestAnimationFrame(render);
+    sceneAdd();
 }
 
 main();
