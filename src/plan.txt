@@ -10,14 +10,14 @@ Assignment 5B: Exploring a High Level Graphics Library
 8. Awesomeness
 
 
-Basic scene working (at least 3 different primary shapes)
-At least one primary shape textured
-Custom 3d textured Model
-Camera movement without orbit controls
-3 different light sources in your scene
-Skybox in scene
-At least 20 primary shapes in the scene
+x   Basic scene working (at least 3 different primary shapes)
+x   At least one primary shape textured
+x   Custom 3d textured Model
+x   Camera movement without orbit controls
+x   3 different light sources in your scene
+x   Skybox in scene
+x   At least 20 primary shapes in the scene
 
+Awesomeness points:
 
-
-idea: Chessboard texture with a bunch of different shapes / models as pieces
+add animation for scholars mate

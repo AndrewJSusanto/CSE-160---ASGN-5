@@ -63,14 +63,14 @@ function main() {
     // Ambient
 
     const color_a = 0xFFFFFF;
-    const intensity_a = 0.03;
+    const intensity_a = 0.09; // 0.03 original
     const light_ambient = new THREE.AmbientLight(color_a, intensity_a);
     scene.add(light_ambient);
 
     // Headlight
 
     const color_h = 0xFFF5D5;
-    const intensity_h = 200;
+    const intensity_h = 100;
     const light_headlight = new THREE.SpotLight(color_h, intensity_h, 100, 10, 0.4);
     light_headlight.position.set(0.26, 1.225, -0.9);
     light_headlight.target.position.set(-100, 1, -1);
@@ -182,23 +182,24 @@ function main() {
     const b_bishop2 = new THREE.Mesh( geo_bishop, mat_black);
     const b_bishop2_head = new THREE.Mesh( geo_bishop_head, mat_black);
 
+    w_bishop1.add(w_bishop1_head)
+    w_bishop2.add(w_bishop2_head)
+    b_bishop1.add(b_bishop1_head)
+    b_bishop2.add(b_bishop2_head)
+
     w_bishop1.position.set(7, 0.5, 3);
-    w_bishop1_head.position.set(7, 0.9, 3);
+    w_bishop1_head.position.set(0, 0.5, 0);
     w_bishop2.position.set(7, 0.5, -3);
-    w_bishop2_head.position.set(7, 0.9, -3);
+    w_bishop2_head.position.set(0, 0.5, 0);
     b_bishop1.position.set(-7, 0.5, 3);
-    b_bishop1_head.position.set(-7, 0.9, 3);
+    b_bishop1_head.position.set(0, 0.5, 0);
     b_bishop2.position.set(-7, 0.5, -3);
-    b_bishop2_head.position.set(-7, 0.9, -3);
+    b_bishop2_head.position.set(0, 0.5, 0);
 
     shapes.push(w_bishop1);
-    shapes.push(w_bishop1_head);
     shapes.push(w_bishop2);
-    shapes.push(w_bishop2_head);
     shapes.push(b_bishop1);
-    shapes.push(b_bishop1_head);
     shapes.push(b_bishop2);
-    shapes.push(b_bishop2_head);
 
 
 
@@ -221,40 +222,42 @@ function main() {
     const b_kn2 = new THREE.Mesh(geo_kn, mat_black);
     const b_kn2_h1 = new THREE.Mesh(geo_kn_h1, mat_black);
     const b_kn2_h2 = new THREE.Mesh(geo_kn_h2, mat_black);
+    
+    w_kn1.add(w_kn1_h1);
+    w_kn1.add(w_kn1_h2);
+    w_kn2.add(w_kn2_h1);
+    w_kn2.add(w_kn2_h2);
+
+    b_kn1.add(b_kn1_h1);
+    b_kn1.add(b_kn1_h2);
+    b_kn2.add(b_kn2_h1);
+    b_kn2.add(b_kn2_h2);
 
 
     w_kn1.position.set(7, 0.5, 5);
-    w_kn1_h1.position.set(7, 1, 5);
+    w_kn1_h1.position.set(0, 0.5, 0);
     w_kn1_h2.rotateZ(Math.PI/2);
-    w_kn1_h2.position.set(6.5, 1, 5);
+    w_kn1_h2.position.set(-0.5, 0.5, 0);
 
     w_kn2.position.set(7, 0.5, -5);
-    w_kn2_h1.position.set(7, 1, -5);
+    w_kn2_h1.position.set(0, 0.5, 0);
     w_kn2_h2.rotateZ(Math.PI/2);
-    w_kn2_h2.position.set(6.5, 1, -5);
+    w_kn2_h2.position.set(-0.5, 0.5, 0);
 
     b_kn1.position.set(-7, 0.5, 5);
-    b_kn1_h1.position.set(-7, 1, 5);
+    b_kn1_h1.position.set(0, 0.5, 0);
     b_kn1_h2.rotateZ(-Math.PI/2);
-    b_kn1_h2.position.set(-6.5, 1, 5);
+    b_kn1_h2.position.set(0.5, 0.5, 0);
 
     b_kn2.position.set(-7, 0.5, -5);
-    b_kn2_h1.position.set(-7, 1, -5);
+    b_kn2_h1.position.set(0, 0.5, 0);
     b_kn2_h2.rotateZ(-Math.PI/2);
-    b_kn2_h2.position.set(-6.5, 1, -5);
+    b_kn2_h2.position.set(0.5, 0.5, 0);
 
     shapes.push(w_kn1);
-    shapes.push(w_kn1_h1);
-    shapes.push(w_kn1_h2);
     shapes.push(w_kn2);
-    shapes.push(w_kn2_h1);
-    shapes.push(w_kn2_h2);
     shapes.push(b_kn1);
-    shapes.push(b_kn1_h1);
-    shapes.push(b_kn1_h2);
     shapes.push(b_kn2);
-    shapes.push(b_kn2_h1);
-    shapes.push(b_kn2_h2);
 
     // QUEENS
     const pearl = loader.load('../resources/images/Pearl.jpg');
@@ -288,8 +291,6 @@ function main() {
     const geo_queen_crown2 = new THREE.OctahedronGeometry(0.45, 0);
 
 
-
-
     const w_queen = new THREE.Mesh(geo_queen, mat_white);
     const w_queen_crown1 = new THREE.Mesh(geo_queen_crown1, mat_white);
     const w_queen_crown2 = new THREE.Mesh(geo_queen_crown2, mat_pearl);
@@ -302,25 +303,25 @@ function main() {
     b_queen_crown1.scale.setScalar(0.04);
     b_queen_crown2.scale.set(1, 0.8, 1);        
 
+    w_queen.add(w_queen_crown1);
+    w_queen.add(w_queen_crown2);
+    b_queen.add(b_queen_crown1);
+    b_queen.add(b_queen_crown2);
+
 
     w_queen.position.set(7, 0.75, 1);
-    w_queen_crown1.position.set(7, 1.4, 1);
-    w_queen_crown2.position.set(7, 2.1, 1);
+    w_queen_crown1.position.set(0, 0.6, 0);
+    w_queen_crown2.position.set(0, 1.3, 0);
 
     b_queen.position.set(-7, 0.75, 1);
-    b_queen_crown1.position.set(-7, 1.4, 1);
-    b_queen_crown2.position.set(-7, 2.1, 1);
+    b_queen_crown1.position.set(0, 0.6, 0);
+    b_queen_crown2.position.set(0, 1.3, 0);
 
     crowns.push(w_queen_crown2);
     crowns.push(b_queen_crown2);
 
     shapes.push(w_queen);
-    shapes.push(w_queen_crown1);
-    shapes.push(w_queen_crown2);
-
     shapes.push(b_queen);
-    shapes.push(b_queen_crown1);
-    shapes.push(b_queen_crown2);
 
     // KINGS
     const geo_king = new THREE.CylinderGeometry(0.4, 0.7, 1.6, 16);
@@ -346,28 +347,30 @@ function main() {
     b_king_crown2.scale.set(1, 0.5, 1);
     b_king_crown3.rotation.x = Math.PI * 0.5;
 
+    w_king.add(w_king_crown1);
+    w_king.add(w_king_crown2);
+    w_king.add(w_king_crown3);
+
+    b_king.add(b_king_crown1);
+    b_king.add(b_king_crown2);
+    b_king.add(b_king_crown3);
+
+
     w_king.position.set(7, 0.80, -1);
-    w_king_crown1.position.set(7, 1.5, -1);
-    w_king_crown2.position.set(7, 2, -1);
-    w_king_crown3.position.set(7, 2.4, -1);
+    w_king_crown1.position.set(0, 0.6, 0);
+    w_king_crown2.position.set(0, 1.2, 0);
+    w_king_crown3.position.set(0, 1.65, 0);
 
     b_king.position.set(-7, 0.80, -1);
-    b_king_crown1.position.set(-7, 1.5, -1);
-    b_king_crown2.position.set(-7, 2, -1);
-    b_king_crown3.position.set(-7, 2.4, -1);
+    b_king_crown1.position.set(0, 0.6, 0);
+    b_king_crown2.position.set(0, 1.2, 0);
+    b_king_crown3.position.set(0, 1.65, 0);
 
-    crowns.push(w_king_crown2);
-    crowns.push(b_king_crown2);
+    crowns.push(w_king_crown2); // anim
+    crowns.push(b_king_crown2); // anim
 
     shapes.push(w_king);
-    shapes.push(w_king_crown1);
-    shapes.push(w_king_crown2);
-    shapes.push(w_king_crown3);
-
     shapes.push(b_king);
-    shapes.push(b_king_crown1);
-    shapes.push(b_king_crown2);
-    shapes.push(b_king_crown3);
 
     // Texture
 
@@ -429,7 +432,6 @@ function main() {
     const b_pawn7_head = b_pawn1_head.clone();
     const b_pawn8_head = b_pawn1_head.clone();
 
-
     w_pawn1.position.set(5, 0.4, 7);
     w_pawn2.position.set(5, 0.4, 5);
     w_pawn3.position.set(5, 0.4, 3);
@@ -439,14 +441,23 @@ function main() {
     w_pawn7.position.set(5, 0.4, -5);
     w_pawn8.position.set(5, 0.4, -7);
 
-    w_pawn1_head.position.set(5, 0.9, 7);
-    w_pawn2_head.position.set(5, 0.9, 5);
-    w_pawn3_head.position.set(5, 0.9, 3);
-    w_pawn4_head.position.set(5, 0.9, 1);
-    w_pawn5_head.position.set(1, 0.9, -1);
-    w_pawn6_head.position.set(5, 0.9, -3);
-    w_pawn7_head.position.set(5, 0.9, -5);
-    w_pawn8_head.position.set(5, 0.9, -7);
+    w_pawn1_head.position.set(0, 0.5, 0);
+    w_pawn2_head.position.set(0, 0.5, 0);
+    w_pawn3_head.position.set(0, 0.5, 0);
+    w_pawn4_head.position.set(0, 0.5, 0);
+    w_pawn5_head.position.set(0, 0.5, 0);
+    w_pawn6_head.position.set(0, 0.5, 0);
+    w_pawn7_head.position.set(0, 0.5, 0);
+    w_pawn8_head.position.set(0, 0.5, 0);
+
+    w_pawn1.add(w_pawn1_head)
+    w_pawn2.add(w_pawn2_head)
+    w_pawn3.add(w_pawn3_head)
+    w_pawn4.add(w_pawn4_head)
+    w_pawn5.add(w_pawn5_head)
+    w_pawn6.add(w_pawn6_head)
+    w_pawn7.add(w_pawn7_head)
+    w_pawn8.add(w_pawn8_head)
 
     b_pawn1.position.set(-5, 0.4, 7);
     b_pawn2.position.set(-5, 0.4, 5);
@@ -457,14 +468,23 @@ function main() {
     b_pawn7.position.set(-5, 0.4, -5);
     b_pawn8.position.set(-5, 0.4, -7);
 
-    b_pawn1_head.position.set(-5, 0.9, 7);
-    b_pawn2_head.position.set(-5, 0.9, 5);
-    b_pawn3_head.position.set(-5, 0.9, 3);
-    b_pawn4_head.position.set(-5, 0.9, 1);
-    b_pawn5_head.position.set(-5, 0.9, -1);
-    b_pawn6_head.position.set(-5, 0.9, -3);
-    b_pawn7_head.position.set(-5, 0.9, -5);
-    b_pawn8_head.position.set(-5, 0.9, -7);
+    b_pawn1_head.position.set(0, 0.5, 0);
+    b_pawn2_head.position.set(0, 0.5, 0);
+    b_pawn3_head.position.set(0, 0.5, 0);
+    b_pawn4_head.position.set(0, 0.5, 0);
+    b_pawn5_head.position.set(0, 0.5, 0);
+    b_pawn6_head.position.set(0, 0.5, 0);
+    b_pawn7_head.position.set(0, 0.5, 0);
+    b_pawn8_head.position.set(0, 0.5, 0);
+
+    b_pawn1.add(b_pawn1_head)
+    b_pawn2.add(b_pawn2_head)
+    b_pawn3.add(b_pawn3_head)
+    b_pawn4.add(b_pawn4_head)
+    b_pawn5.add(b_pawn5_head)
+    b_pawn6.add(b_pawn6_head)
+    b_pawn7.add(b_pawn7_head)
+    b_pawn8.add(b_pawn8_head)
 
     shapes.push(w_pawn1);
     shapes.push(w_pawn2);
@@ -475,15 +495,6 @@ function main() {
     shapes.push(w_pawn7);
     shapes.push(w_pawn8);
 
-    shapes.push(w_pawn1_head);
-    shapes.push(w_pawn2_head);
-    shapes.push(w_pawn3_head);
-    shapes.push(w_pawn4_head);
-    shapes.push(w_pawn5_head);
-    shapes.push(w_pawn6_head);
-    shapes.push(w_pawn7_head);
-    shapes.push(w_pawn8_head);
-
     shapes.push(b_pawn1);
     shapes.push(b_pawn2);
     shapes.push(b_pawn3);
@@ -493,14 +504,59 @@ function main() {
     shapes.push(b_pawn7);
     shapes.push(b_pawn8);
 
-    shapes.push(b_pawn1_head);
-    shapes.push(b_pawn2_head);
-    shapes.push(b_pawn3_head);
-    shapes.push(b_pawn4_head);
-    shapes.push(b_pawn5_head);
-    shapes.push(b_pawn6_head);
-    shapes.push(b_pawn7_head);
-    shapes.push(b_pawn8_head);
+    const coordinates = [
+        // b_pawn5 to e5 [-1, 0.4, -1]
+        // w_bishop2 to c4 [1, 0.4, 3]
+        // b_horse1 to c6 [-3, 0.4, 3]
+        // w_queen to h5 [1, 0.4, -7]
+        // b_horse2 to f6 [-3, 0.4, -3]
+        // w_queen to f7 checkmate [-5, 0.4, -3]
+
+        new THREE.Vector3(-1, 0.4, -1),
+        new THREE.Vector3(1, 0.5, 3),
+        new THREE.Vector3(-3, 0.5, 3),
+        new THREE.Vector3(-1, 0.75, -7),
+        new THREE.Vector3(-3, 0.5, -3),
+        new THREE.Vector3(-7, -2, -1) // King dies
+    ]
+    
+    function b_e5() {
+        requestAnimationFrame(b_e5);
+        b_pawn5.position.lerp(coordinates[0], 0.15);
+        renderer.render(scene, camera);
+    }
+    function w_Bc4() {
+        requestAnimationFrame(w_Bc4);
+        w_bishop2.position.lerp(coordinates[1], 0.15);
+        renderer.render(scene, camera);
+    }
+    function b_Nc6() {
+        requestAnimationFrame(b_Nc6);
+        b_kn1.position.lerp(coordinates[2], 0.15);
+        renderer.render(scene, camera);
+    }
+    function w_Qh5() {
+        requestAnimationFrame(w_Qh5);
+        w_queen.position.lerp(coordinates[3], 0.2);
+        renderer.render(scene, camera);
+    }
+    function b_Nf6() {
+        requestAnimationFrame(b_Nf6);
+        b_kn2.position.lerp(coordinates[4], 0.15);
+        renderer.render(scene, camera);
+    }
+    function b_Kff() {
+        requestAnimationFrame(b_Kff);
+        b_king.position.lerp(coordinates[5], 0.1);
+        renderer.render(scene, camera);
+    }
+
+    setTimeout(b_e5, 500);
+    setTimeout(w_Bc4, 3000);
+    setTimeout(b_Nc6, 5500);
+    setTimeout(w_Qh5, 8000);
+    setTimeout(b_Nf6, 10500);
+    setTimeout(b_Kff, 15000);
 
     function sceneAdd() {
         shapes.forEach((shape, ndx) => {
